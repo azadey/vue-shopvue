@@ -2,7 +2,7 @@ import Swal from "sweetalert2";
 
 export function useSwal() {
   const showAlert = async (options) => {
-    await Swal.fire(options);
+    return await Swal.fire(options);
   };
 
   const showSuccess = async (message) => {
@@ -11,7 +11,7 @@ export function useSwal() {
       title: "Success",
       text: message,
       position: "top-end",
-      timmer: 1500
+      timer: 1500
     });
   };
 
@@ -21,7 +21,7 @@ export function useSwal() {
       title: "Error",
       text: message,
       position: "top-end",
-      timmer: 1500
+      timer: 1500
     });
   };
 
@@ -35,7 +35,7 @@ export function useSwal() {
       cancelButtonColor: "#d33",
       confirmButtonText: "Yes, delete it!",
       position: "top-end",
-      timmer: 1500
+      timer: 1500
     });
   };
 

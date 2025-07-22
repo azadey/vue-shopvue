@@ -3,7 +3,7 @@
     <div class="row border p-4 my-5 rounded">
       <div class="col-9">
         <form v-on:submit.prevent="handleSubmit">
-          <div class="h2 text-center text-success">Create Product</div>
+          <div class="h2 text-center text-success">{{ productId ? 'Update Product' : 'Create Product' }}</div>
           <hr />
           <div v-if="errorList.length" class="alert alert-danger pb-0">
             Please fix the following errors:
@@ -68,7 +68,7 @@
             <button class="btn btn-success m-2 w-25" :disabled="loading">
               <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>Submit
             </button>
-            <a href="/" class="btn btn-secondary m-2 w-25"> Cancel </a>
+            <router-link :to="{ name: APP_ROUTE_NAMES.PRODUCT_LIST }" class="btn btn-secondary m-2 w-25"> Cancel </router-link>
           </div>
         </form>
       </div>
@@ -90,10 +90,10 @@ import { useRouter, useRoute } from 'vue-router';
 import { PRODUCT_CATEGORIES } from '@/constants/appConstants';
 import { useSwal } from '@/utility/useSwal';
 import productService from '@/services/productService';
-import router from '@/router/routes';
 import { APP_ROUTE_NAMES } from '@/constants/routeName';
 const { showSuccess, showError, showConfirm } = useSwal();
 
+const router = useRouter();
 const route = useRoute();
 const loading = ref(false);
 const errorList = reactive([]);
@@ -107,6 +107,13 @@ const productObj = reactive({
     category: '',
     image: 'https://placehold.co/600x400',
 })
+const productId = ref(route.params.id || null);
+
+onMounted(() => {
+    if (productId.value) {
+        fetchProductDetails(productId.value);
+    }
+});
 
 async function handleSubmit() {
 
@@ -134,8 +141,15 @@ async function handleSubmit() {
             isBestSeller: Boolean(productObj.isBestSeller),
           }
           
-          await productService.createProduct(productData);
-          showSuccess('Product created successfully!');
+          if (productId.value) {
+            // Update existing product
+            await productService.updateProduct(productId.value, productData);
+            showSuccess('Product updated successfully!');
+          } else {
+            // Create new product
+            await productService.createProduct(productData);
+            showSuccess('Product created successfully!');
+          }
           console.log('Product Data:', productData);
 
           router.push({
@@ -147,6 +161,19 @@ async function handleSubmit() {
         console.log(e);
     }
     finally {
+        loading.value = false;
+    }
+}
+
+async function fetchProductDetails(id) {
+    try {
+        loading.value = true;
+        const product = await productService.getProductById(id);
+        Object.assign(productObj, { ...product, tags: product.tags.join(', ') });
+    } catch (error) {
+        console.error('Error fetching product details:', error);
+        showError('Failed to fetch product details.');
+    } finally {
         loading.value = false;
     }
 }
