@@ -9,7 +9,7 @@ import { getAnalytics } from "firebase/analytics";
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "DUMMY_API_KEY",
+  apiKey: "AIzaSyAKsQebn6SeSM3uWVA7zHCgN2slYE_vwn8",
   authDomain: "shopvue-a9c51.firebaseapp.com",
   projectId: "shopvue-a9c51",
   storageBucket: "shopvue-a9c51.firebasestorage.app",
