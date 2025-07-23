@@ -12,22 +12,29 @@ export const useAuthStore = defineStore("authStore", () => {
   const role = ref(null); // Default role
 
   const initialized = ref(false);
-  const isAuthenticated = computed(() => !!user.value);
-  const isAdmin = computed(() => user.value && user.value.role === USER_ROLES.ADMIN);
+  const isAuthenticated = computed(() => user.value !== null);
+  const isAdmin = computed(() => user.value && role.value === USER_ROLES.ADMIN);
   
   async function initializeAuth() {
     isLoading.value = true;
-    onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        user.value = currentUser;
+
+    return new Promise((resolve) => {
+      onAuthStateChanged(auth, async (currentUser) => {
+        if (currentUser) {
+          user.value = currentUser;
+          await fetchUser(user.value.uid); // Fetch user details from Firestore
+          initialized.value = true;
+        } else {
+          user.value = null;
+          error.value = null;
+        }
         initialized.value = true;
-      } else {
-        user.value = null;
-        error.value = null;
-      }
-      initialized.value = true;
-      isLoading.value = false;
+        isLoading.value = false;
+      });
+
+      resolve();
     });
+    
   }
 
   async function signUpUser(email, password) {
@@ -57,7 +64,6 @@ export const useAuthStore = defineStore("authStore", () => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       user.value = userCredential.user;
-      user.role = USER_ROLES.USER; // Default role for signed-in users
     } catch (err) {
       error.value = err.message;
       throw err; // Re-throw the error for further handling if needed
@@ -86,6 +92,7 @@ export const useAuthStore = defineStore("authStore", () => {
       const userDoc = await getDoc(doc(db, "users", uid));
       if (userDoc.exists()) {
         user.value = userDoc.data();
+        role.value = user.value.role || USER_ROLES.USER; // Set role from user data
       } else {
         console.error("No such user!");
       }

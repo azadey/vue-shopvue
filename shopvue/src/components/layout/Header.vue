@@ -31,6 +31,9 @@
             </ul>
 
             <ul class="d-flex navbar-nav">
+                <li class="nav-link" v-if="authStore.isAuthenticated">
+                    Welcome, {{ authStore.user?.email || 'User' }}  
+                </li>
                 <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-laptop"></i>

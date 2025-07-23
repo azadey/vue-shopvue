@@ -61,12 +61,13 @@
           <div class="mb-3">
             <label class="form-label">Image</label>
             <div class="input-group">
-              <input type="file" class="form-control" />
+              <input type="file" class="form-control" 
+              @change="handleFileUpload" :disabled="isImageUploading" />
             </div>
           </div>
           <div class="pt-3">
-            <button class="btn btn-success m-2 w-25" :disabled="loading">
-              <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>Submit
+            <button class="btn btn-success m-2 w-25" :disabled="loading || isImageUploading">
+              <span v-if="loading || isImageUploading" class="spinner-border spinner-border-sm me-2"></span>Submit
             </button>
             <router-link :to="{ name: APP_ROUTE_NAMES.PRODUCT_LIST }" class="btn btn-secondary m-2 w-25"> Cancel </router-link>
           </div>
@@ -74,7 +75,7 @@
       </div>
       <div class="col-3">
         <img
-          :src="`https://placehold.co/600x400`"
+          :src="productObj.image || `https://placehold.co/600x400`"
           class="img-fluid w-100 m-3 p-3 rounded"
           alt="Product
         preview"
@@ -85,17 +86,19 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted } from 'vue';
+import { reactive, ref, onMounted, h } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { PRODUCT_CATEGORIES } from '@/constants/appConstants';
-import { useSwal } from '@/utility/useSwal';
+import { useSwal } from '@/composibles/useSwal';
 import productService from '@/services/productService';
 import { APP_ROUTE_NAMES } from '@/constants/routeName';
+import { uploadToCloudinary } from '@/utility/cloudinary';
 const { showSuccess, showError, showConfirm } = useSwal();
 
 const router = useRouter();
 const route = useRoute();
 const loading = ref(false);
+const isImageUploading = ref(false);
 const errorList = reactive([]);
 const productObj = reactive({
     name: '',
@@ -162,6 +165,23 @@ async function handleSubmit() {
     }
     finally {
         loading.value = false;
+    }
+}
+
+async function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    isImageUploading.value = true;
+    try {
+        const imageUrl = await uploadToCloudinary(file);
+        productObj.image = imageUrl;
+        showSuccess('Image uploaded successfully!');
+    } catch (error) {
+        console.error('Error uploading image:', error);
+        showError('Failed to upload image.');
+    } finally {
+        isImageUploading.value = false;
     }
 }
 
